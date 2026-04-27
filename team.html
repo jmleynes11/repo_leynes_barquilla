@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BattleForge — Meet the Team</title>
+  <meta name="description" content="The developers behind BattleForge — a BSIT Game Dev Sprint project.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,400&family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink:     #060610;
+      --panel:   #0d0d1e;
+      --border:  #1e1e3a;
+      --border2: #2a2a48;
+      --gold:    #d4a843;
+      --gold-lt: #f0c96a;
+      --gold-dk: #7a5c10;
+      --crimson: #c02828;
+      --text:    #c8c8e8;
+      --muted:   #606080;
+    }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body {
+      background: var(--ink);
+      color: var(--text);
+      font-family: 'Crimson Pro', serif;
+      font-size: 18px;
+      line-height: 1.7;
+      cursor: crosshair;
+    }
+
+    body::before {
+      content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      background-size:200px 200px;
+    }
+
+    /* ─── NAV ─── */
+    nav {
+      position: fixed; top:0; left:0; right:0; z-index:100;
+      display:flex; justify-content:space-between; align-items:center;
+      padding:16px 40px;
+      background: linear-gradient(to bottom, rgba(6,6,16,.95) 0%, transparent 100%);
+      backdrop-filter: blur(6px);
+    }
+    .nav-logo {
+      font-family:'Press Start 2P', monospace;
+      font-size:11px; color:var(--gold);
+      text-decoration:none; letter-spacing:1px;
+    }
+    .nav-links { display:flex; gap:32px; }
+    .nav-links a {
+      font-family:'Crimson Pro', serif;
+      font-size:15px; letter-spacing:2px;
+      text-transform:uppercase; color:var(--muted);
+      text-decoration:none; transition:color .2s;
+    }
+    .nav-links a:hover { color:var(--gold); }
+    .nav-links a.active { color:var(--gold); }
+
+    /* ─── PAGE HEADER ─── */
+    .page-header {
+      position:relative; z-index:1;
+      padding:140px 24px 60px;
+      text-align:center;
+      border-bottom:1px solid var(--border);
+      overflow:hidden;
+    }
+    .page-header::before {
+      content:''; position:absolute;
+      width:600px; height:400px;
+      background:radial-gradient(ellipse at center, rgba(212,168,67,.06) 0%, transparent 70%);
+      top:50%; left:50%; transform:translate(-50%,-50%);
+      pointer-events:none;
+    }
+    .page-header::after {
+      content:''; position:absolute; inset:0;
+      background-image: repeating-linear-gradient(
+        -55deg, transparent, transparent 28px,
+        rgba(255,255,255,.01) 28px, rgba(255,255,255,.01) 29px
+      );
+      pointer-events:none;
+    }
+    .ph-label {
+      font-family:'Press Start 2P', monospace;
+      font-size:8px; color:var(--gold-dk);
+      letter-spacing:4px; text-transform:uppercase;
+      margin-bottom:16px;
+      animation:fadeUp .6s ease both;
+    }
+    .ph-title {
+      font-family:'Cinzel Decorative', serif;
+      font-size:clamp(32px, 6vw, 64px);
+      font-weight:900; color:var(--gold);
+      text-shadow:2px 4px 0 var(--gold-dk);
+      margin-bottom:12px;
+      animation:fadeUp .6s .1s ease both;
+    }
+    .ph-sub {
+      font-style:italic; font-size:18px;
+      color:rgba(200,200,232,.6);
+      max-width:480px; margin:0 auto;
+      animation:fadeUp .6s .2s ease both;
+    }
+
+    @keyframes fadeUp {
+      from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)}
+    }
+
+    /* ─── MAIN ─── */
+    main { position:relative; z-index:1; padding:64px 24px; max-width:960px; margin:0 auto; }
+
+    /* ─── TEAM CARDS ─── */
+    .team-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(400px, 1fr));
+      gap:24px;
+      margin-bottom:64px;
+    }
+
+    .team-card {
+      background:var(--panel);
+      border:1px solid var(--border2);
+      border-radius:12px;
+      overflow:hidden;
+      transition:transform .2s, border-color .2s;
+    }
+    .team-card:hover { transform:translateY(-4px); border-color:var(--gold-dk); }
+
+    .tc-top {
+      padding:32px 32px 24px;
+      display:flex; gap:24px; align-items:flex-start;
+      border-bottom:1px solid var(--border);
+    }
+
+    /* Avatar circle with initials */
+    .tc-avatar {
+      width:72px; height:72px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      flex-shrink:0;
+      font-family:'Cinzel Decorative', serif;
+      font-size:22px; font-weight:900;
+      border:2px solid;
+    }
+    .av-1 {
+      background:rgba(212,168,67,.1);
+      border-color:var(--gold-dk);
+      color:var(--gold);
+    }
+    .av-2 {
+      background:rgba(192,40,40,.1);
+      border-color:#601010;
+      color:#e05050;
+    }
+
+    .tc-info { flex:1; min-width:0; }
+    .tc-name {
+      font-family:'Cinzel Decorative', serif;
+      font-size:clamp(18px,3vw,26px);
+      font-weight:700; color:var(--gold-lt);
+      margin-bottom:4px; line-height:1.2;
+    }
+    .tc-role {
+      font-family:'Press Start 2P', monospace;
+      font-size:7px; color:var(--gold-dk);
+      letter-spacing:1px; margin-bottom:10px;
+    }
+    .tc-github-link {
+      display:inline-flex; align-items:center; gap:7px;
+      font-family:'Press Start 2P', monospace;
+      font-size:7px; color:var(--muted);
+      text-decoration:none; padding:6px 12px;
+      border:1px solid var(--border2); border-radius:4px;
+      background:#090916;
+      transition:color .2s, border-color .2s;
+    }
+    .tc-github-link:hover { color:var(--gold); border-color:var(--gold-dk); }
+    .tc-github-link svg { width:14px; height:14px; fill:currentColor; flex-shrink:0; }
+
+    /* Body of card */
+    .tc-body { padding:24px 32px 28px; }
+
+    .tc-bio {
+      font-size:16px; color:rgba(200,200,232,.75);
+      font-style:italic; margin-bottom:24px; line-height:1.7;
+    }
+
+    /* Contributions list */
+    .tc-contrib-label {
+      font-family:'Press Start 2P', monospace;
+      font-size:7px; color:var(--gold-dk);
+      letter-spacing:3px; margin-bottom:14px;
+    }
+    .tc-contrib-list {
+      list-style:none; display:flex; flex-direction:column; gap:8px;
+    }
+    .tc-contrib-list li {
+      display:flex; gap:10px; align-items:flex-start;
+      font-size:15px; color:var(--muted);
+    }
+    .tc-contrib-list li::before {
+      content:'▸';
+      color:var(--gold-dk); flex-shrink:0; margin-top:2px;
+      font-size:13px;
+    }
+
+    /* Skills tags */
+    .tc-skills {
+      display:flex; flex-wrap:wrap; gap:7px; margin-top:20px;
+    }
+    .skill-tag {
+      font-family:'Press Start 2P', monospace;
+      font-size:6px; padding:5px 10px; border-radius:3px;
+      background:#090916; border:1px solid var(--border2);
+      color:var(--muted);
+    }
+
+    /* ─── PROJECT SECTION ─── */
+    .project-section {
+      border-top:1px solid var(--border);
+      padding-top:48px; margin-bottom:64px;
+    }
+    .ps-label {
+      font-family:'Press Start 2P', monospace;
+      font-size:8px; color:var(--gold-dk);
+      letter-spacing:4px; margin-bottom:12px;
+    }
+    .ps-title {
+      font-family:'Cinzel Decorative', serif;
+      font-size:clamp(22px,3.5vw,34px);
+      color:var(--gold-lt); margin-bottom:24px;
+      text-shadow:1px 2px 0 var(--gold-dk);
+    }
+
+    .project-meta-grid {
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+      gap:16px; margin-bottom:32px;
+    }
+    .meta-card {
+      background:var(--panel); border:1px solid var(--border);
+      border-radius:8px; padding:20px;
+    }
+    .meta-label {
+      font-family:'Press Start 2P', monospace;
+      font-size:6px; color:var(--muted); margin-bottom:8px;
+    }
+    .meta-value {
+      font-family:'Cinzel Decorative', serif;
+      font-size:18px; color:var(--gold-lt);
+    }
+    .meta-sub { font-size:13px; color:var(--muted); margin-top:4px; }
+
+    /* Tech stack */
+    .tech-grid {
+      display:flex; flex-wrap:wrap; gap:10px;
+    }
+    .tech-badge {
+      font-family:'Press Start 2P', monospace;
+      font-size:7px; padding:8px 14px;
+      border-radius:4px; border:1px solid var(--border2);
+      background:#090916; color:var(--text);
+    }
+
+    /* ─── REPO CTA ─── */
+    .repo-cta {
+      background:var(--panel); border:1px solid var(--border2);
+      border-radius:12px; padding:36px 40px;
+      display:flex; justify-content:space-between; align-items:center;
+      flex-wrap:wrap; gap:24px;
+      margin-bottom:48px;
+    }
+    .repo-cta-text h3 {
+      font-family:'Cinzel Decorative', serif;
+      font-size:clamp(18px,3vw,26px); color:var(--gold-lt);
+      margin-bottom:6px;
+    }
+    .repo-cta-text p { font-size:15px; color:var(--muted); font-style:italic; }
+    .btn-play {
+      font-family:'Press Start 2P', monospace;
+      font-size:10px; padding:16px 28px;
+      background:var(--gold); color:#1a0e00;
+      border:none; border-radius:4px;
+      cursor:pointer; text-decoration:none;
+      box-shadow:0 4px 0 var(--gold-dk);
+      transition:all .15s; display:inline-block; white-space:nowrap;
+    }
+    .btn-play:hover { transform:translateY(-2px); box-shadow:0 6px 0 var(--gold-dk); }
+    .btn-ghost {
+      font-family:'Press Start 2P', monospace;
+      font-size:9px; padding:15px 24px;
+      background:transparent; color:var(--gold);
+      border:2px solid var(--gold-dk); border-radius:4px;
+      cursor:pointer; text-decoration:none;
+      transition:all .15s; display:inline-block; white-space:nowrap;
+    }
+    .btn-ghost:hover { border-color:var(--gold); background:rgba(212,168,67,.06); }
+
+    /* ─── FOOTER ─── */
+    footer {
+      border-top:1px solid var(--border);
+      text-align:center; padding:28px;
+      font-size:13px; color:var(--muted);
+    }
+    footer a { color:var(--gold-dk); text-decoration:none; }
+    footer a:hover { color:var(--gold); }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="index.html">⚔ BATTLEFORGE</a>
+  <div class="nav-links">
+    <a href="index.html#campaign">Campaign</a>
+    <a href="index.html#how-to-play">Guide</a>
+    <a href="team.html" class="active">Team</a>
+  </div>
+</nav>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="ph-label">BSIT Game Dev Sprint · 14-Day Build</div>
+  <h1 class="ph-title">The Forge Team</h1>
+  <p class="ph-sub">Two developers. One campaign. Every line written from scratch in 14 days.</p>
+</div>
+
+<main>
+
+  <!-- ── TEAM CARDS ── -->
+  <div class="team-grid">
+
+    <!-- STUDENT 1 — replace all placeholder text -->
+    <div class="team-card">
+      <div class="tc-top">
+        <div class="tc-avatar av-1">A</div>  <!-- Change letter to initials -->
+        <div class="tc-info">
+          <div class="tc-name">Student Name 1</div>
+          <div class="tc-role">GAME DEVELOPER · LEAD</div>
+          <a class="tc-github-link" href="https://github.com/YOUR-USERNAME-1" target="_blank">
+            <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+            </svg>
+            @YOUR-USERNAME-1
+          </a>
+        </div>
+      </div>
+      <div class="tc-body">
+        <p class="tc-bio">
+          <!-- Write 2–3 sentences about this student's background, focus area, and what excites them about game development. -->
+          Replace this with a short bio about Student 1. What's your year level, your interests, what drew you to game development?
+        </p>
+        <div class="tc-contrib-label">CONTRIBUTIONS</div>
+        <ul class="tc-contrib-list">
+          <li>Core combat engine — turn resolution, AI decision logic, and game state management</li>
+          <li>Enemy AI weighting system for all three campaign levels</li>
+          <li>Level progression, inter-level rewards, and game-over conditions</li>
+          <!-- Add or remove items as needed -->
+        </ul>
+        <div class="tc-skills">
+          <span class="skill-tag">HTML</span>
+          <span class="skill-tag">CSS</span>
+          <span class="skill-tag">JAVASCRIPT</span>
+          <span class="skill-tag">GAME LOGIC</span>
+          <!-- Add your own skills -->
+        </div>
+      </div>
+    </div>
+
+    <!-- STUDENT 2 — replace all placeholder text -->
+    <div class="team-card">
+      <div class="tc-top">
+        <div class="tc-avatar av-2">B</div>  <!-- Change letter to initials -->
+        <div class="tc-info">
+          <div class="tc-name">Student Name 2</div>
+          <div class="tc-role">UI DESIGNER · FRONT-END</div>
+          <a class="tc-github-link" href="https://github.com/YOUR-USERNAME-2" target="_blank">
+            <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+            </svg>
+            @YOUR-USERNAME-2
+          </a>
+        </div>
+      </div>
+      <div class="tc-body">
+        <p class="tc-bio">
+          <!-- Write 2–3 sentences about this student's background, focus area, and what excites them about game development. -->
+          Replace this with a short bio about Student 2. What's your year level, your interests, what drew you to web design and game UI?
+        </p>
+        <div class="tc-contrib-label">CONTRIBUTIONS</div>
+        <ul class="tc-contrib-list">
+          <li>Battle screen layout — character columns, arena, move grid, and stat bars</li>
+          <li>SVG character art for all three enemies and Forger</li>
+          <li>Landing page, team page, and complete visual design system</li>
+          <!-- Add or remove items as needed -->
+        </ul>
+        <div class="tc-skills">
+          <span class="skill-tag">HTML</span>
+          <span class="skill-tag">CSS</span>
+          <span class="skill-tag">SVG ART</span>
+          <span class="skill-tag">UI DESIGN</span>
+          <!-- Add your own skills -->
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── PROJECT INFO ── -->
+  <div class="project-section">
+    <div class="ps-label">About the Project</div>
+    <h2 class="ps-title">BattleForge</h2>
+
+    <div class="project-meta-grid">
+      <div class="meta-card">
+        <div class="meta-label">COURSE</div>
+        <div class="meta-value">BSIT</div>
+        <div class="meta-sub">Game Development Sprint</div>
+      </div>
+      <div class="meta-card">
+        <div class="meta-label">TIMELINE</div>
+        <div class="meta-value">14 Days</div>
+        <div class="meta-sub">Design → Deploy</div>
+      </div>
+      <div class="meta-card">
+        <div class="meta-label">PLATFORM</div>
+        <div class="meta-value">Browser</div>
+        <div class="meta-sub">GitHub Pages · No install</div>
+      </div>
+      <div class="meta-card">
+        <div class="meta-label">CAMPAIGN</div>
+        <div class="meta-value">3 Levels</div>
+        <div class="meta-sub">Shadow · Void · Boss</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:20px;">
+      <div class="ps-label" style="margin-bottom:12px;">Tech Stack</div>
+      <div class="tech-grid">
+        <span class="tech-badge">Vanilla HTML5</span>
+        <span class="tech-badge">CSS3 Custom Properties</span>
+        <span class="tech-badge">Vanilla JavaScript (ES6)</span>
+        <span class="tech-badge">Inline SVG Art</span>
+        <span class="tech-badge">Google Fonts</span>
+        <span class="tech-badge">GitHub Pages</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── REPO CTA ── -->
+  <div class="repo-cta">
+    <div class="repo-cta-text">
+      <h3>View the Source Code</h3>
+      <p>Full repository with commit history, README, and all project files.</p>
+    </div>
+    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+      <a href="battleforge.html" class="btn-play">▶ PLAY NOW</a>
+      <a href="https://github.com/YOUR-ORG/battleforge" target="_blank" class="btn-ghost">★ GitHub Repo</a>
+    </div>
+  </div>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2025 BattleForge · BSIT Game Dev Sprint · <a href="index.html">Home</a> · <a href="https://github.com/YOUR-ORG/battleforge" target="_blank">GitHub Repository</a></p>
+</footer>
+
+</body>
+</html>
