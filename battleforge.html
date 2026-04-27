@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BattleForge — 3-Level Campaign</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Exo+2:ital,wght@0,300;0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #08080f;
+      --panel:     #10101c;
+      --border:    #252540;
+      --gold:      #f0c040;
+      --gold-dim:  #7a6010;
+      --gold-dk:   #3a2c06;
+      --red:       #e84040;
+      --red-bg:    #2a0c0c;
+      --blue:      #4090e8;
+      --blue-bg:   #0c1e3a;
+      --green:     #40c870;
+      --green-bg:  #0a2218;
+      --purple:    #a050f0;
+      --purple-bg: #1a0a30;
+      --teal:      #40c8b0;
+      --teal-bg:   #082820;
+      --text:      #d8d8f0;
+      --muted:     #70708a;
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Exo 2', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      cursor: crosshair;
+    }
+
+    /* Tiled grid background */
+    body::before {
+      content:''; position:fixed; inset:0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size:44px 44px;
+      opacity:.22; pointer-events:none;
+    }
+
+    /* Vignette */
+    body::after {
+      content:''; position:fixed; inset:0;
+      background:radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,.75) 100%);
+      pointer-events:none;
+    }
+
+    /* ── SCREENS ── */
+    .screen { display:none; width:100%; max-width:660px; padding:20px; position:relative; z-index:1; }
+    .screen.active { display:block; }
+    .fade-in { animation:fadeIn .3s ease; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+
+    /* ══════════════════════
+       MENU SCREEN
+    ══════════════════════ */
+    #menu-screen { text-align:center; }
+
+    .game-title {
+      font-family:'Press Start 2P', monospace;
+      font-size:clamp(26px, 5.5vw, 46px);
+      line-height:1.4; color:var(--gold);
+      text-shadow:0 0 28px rgba(240,192,64,.5), 4px 4px 0 var(--gold-dim);
+      animation:titleGlow 3s ease-in-out infinite;
+      margin-bottom:4px;
+    }
+    @keyframes titleGlow {
+      0%,100%{ text-shadow:0 0 28px rgba(240,192,64,.5), 4px 4px 0 var(--gold-dim); }
+      50%    { text-shadow:0 0 56px rgba(240,192,64,.9), 4px 4px 0 var(--gold-dim); }
+    }
+    .game-sub {
+      font-size:10px; color:var(--muted);
+      letter-spacing:5px; text-transform:uppercase;
+      margin-bottom:22px;
+    }
+
+    /* Crossed swords art */
+    .menu-art {
+      width:110px; height:110px;
+      margin:0 auto 22px; position:relative;
+    }
+    .sword {
+      position:absolute;
+      width:9px; height:90px;
+      background:linear-gradient(to bottom, #e8e8f8, #9090b0, #505070);
+      border-radius:3px 3px 1px 1px;
+      top:10px; left:50%;
+      transform-origin:center center;
+    }
+    .sword::before {
+      content:''; position:absolute;
+      width:42px; height:8px; background:var(--gold);
+      border-radius:4px; top:20px; left:-17px;
+    }
+    .sword::after {
+      content:''; position:absolute;
+      width:16px; height:16px; background:var(--gold);
+      border-radius:50%; bottom:-8px; left:-4px;
+      box-shadow:0 0 10px rgba(240,192,64,.5);
+    }
+    .sword-1 { transform:translateX(-50%) rotate(-42deg); }
+    .sword-2 { transform:translateX(-50%) rotate(42deg); }
+    .menu-art::after {
+      content:''; position:absolute;
+      width:14px; height:14px;
+      background:radial-gradient(circle, #fff 0%, var(--gold) 50%, transparent 100%);
+      border-radius:50%;
+      top:50%; left:50%; transform:translate(-50%,-50%);
+      box-shadow:0 0 18px var(--gold), 0 0 36px rgba(240,192,64,.4);
+      animation:orbPulse 2s ease-in-out infinite;
+    }
+    @keyframes orbPulse {
+      0%,100%{ transform:translate(-50%,-50%) scale(1); opacity:.9; }
+      50%    { transform:translate(-50%,-50%) scale(1.3); opacity:1; }
+    }
+
+    /* Level pills */
+    .level-pills {
+      display:flex; gap:7px; justify-content:center; flex-wrap:wrap;
+      margin-bottom:18px;
+    }
+    .lvl-pill {
+      font-family:'Press Start 2P', monospace;
+      font-size:6px; padding:5px 10px; border-radius:4px; border:1px solid;
+    }
+    .lp-1 { color:var(--teal);  border-color:#1a4840; background:rgba(64,200,176,.07); }
+    .lp-2 { color:var(--gold);  border-color:var(--gold-dim); background:rgba(240,192,64,.07); }
+    .lp-3 { color:var(--red);   border-color:#601010; background:rgba(232,64,64,.07); }
+
+    /* How-to box */
+    .howto {
+      background:var(--panel); border:1px solid var(--border);
+      border-radius:10px; padding:18px 20px;
+      margin-bottom:20px; text-align:left;
+    }
+    .howto-title {
+      font-family:'Press Start 2P', monospace;
+      font-size:8px; color:var(--gold);
+      margin-bottom:14px; letter-spacing:1px;
+    }
+    .move-row {
+      display:flex; align-items:flex-start;
+      gap:12px; margin-bottom:10px;
+    }
+    .move-row:last-child { margin-bottom:0; }
+    .move-tag {
+      font-family:'Press Start 2P', monospace;
+      font-size:6.5px; padding:5px 8px;
+      border-radius:4px; white-space:nowrap;
+      flex-shrink:0;
+    }
+    .tag-atk { background:var(--red-bg);    color:var(--red);    border:1px solid var(--red); }
+    .tag-def { background:var(--blue-bg);   color:var(--blue);   border:1px solid var(--blue); }
+    .tag-spc { background:var(--purple-bg); color:var(--purple); border:1px solid var(--purple); }
+    .tag-heal { background:var(--green-bg); color:var(--green);  border:1px solid var(--green); }
+    .move-desc { font-size:12.5px; color:var(--muted); line-height:1.55; }
+
+    .btn-primary {
+      font-family:'Press Start 2P', monospace;
+      font-size:12px; padding:16px 40px;
+      background:var(--gold); color:#160e00;
+      border:none; border-radius:7px;
+      cursor:pointer; transition:all .15s;
+      box-shadow:0 4px 0 var(--gold-dim), 0 8px 24px rgba(240,192,64,.3);
+    }
+    .btn-primary:hover { transform:translateY(-3px); box-shadow:0 7px 0 var(--gold-dim), 0 14px 32px rgba(240,192,64,.5); }
+    .btn-primary:active { transform:translateY(2px); box-shadow:0 2px 0 var(--gold-dim); }
+
+
+    /* ══════════════════════
+       BATTLE SCREEN
+    ══════════════════════ */
+    .battle-topbar {
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:12px;
+    }
+    .turn-pill {
+      font-family:'Press Start 2P', monospace;
+      font-size:7px; padding:6px 13px;
+      border-radius:20px; letter-spacing:1px; transition:all .3s;
+    }
+    .pill-player { background:var(--blue-bg); color:var(--blue); border:1px solid var(--blue); }
+    .pill-enemy  { background:var(--red-bg);  color:var(--red);  border:1px solid var(--red); }
+
+    /* Level progress bar */
+    .progress-bar {
+      display:flex; gap:5px; align-items:center;
+    }
+    .pb-pip {
+      width:26px; height:7px; border-radius:3px;
+      border:1px solid var(--border);
+      background:var(--border); transition:background .4s;
+    }
+    .pb-pip.done   { background:var(--gold); border-color:var(--gold-dim); }
+    .pb-pip.active { background:rgba(240,192,64,.25); border-color:var(--gold); }
+    .pb-label {
+      font-family:'Press Start 2P', monospace;
+      font-size:6px; color:var(--muted); margin-left:3px;
+    }
+
+    /* Arena */
+    .arena {
+      display:grid; grid-template-columns:1fr 44px 1fr;
+      align-items:end; gap:8px;
+      background:var(--panel); border:1px solid var(--border);
+      border-radius:12px; padding:18px 14px 16px;
+      margin-bottom:12px; min-height:206px;
+      position:relative; overflow:hidden;
+    }
+    .arena::before { /* floor line */
+      content:''; position:absolute;
+      bottom:48px; left:0; right:0; height:1px;
+      background:linear-gradient(to right, transparent, var(--border), var(--border), transparent);
+    }
+    .arena::after { /* floor glow */
+      content:''; position:absolute;
+      bottom:0; left:0; right:0; height:55px;
+      background:linear-gradient(to top, rgba(64,128,232,.04), transparent);
+      pointer-events:none;
+    }
+
+    /* Player shield overlay */
+    #player-shield {
+      position:absolute; inset:0; border-radius:12px;
+      pointer-events:none; opacity:0; transition:opacity .3s;
+    }
+    #player-shield.on {
+      opacity:1;
+      box-shadow:inset 0 0 28px rgba(64,144,232,.28);
+      border:1px solid rgba(64,144,232,.4);
+      animation:shieldPulse 1.2s ease-in-out infinite;
+    }
+    @keyframes shieldPulse {
+      0%,100%{ box-shadow:inset 0 0 28px rgba(64,144,232,.25); }
+      50%    { box-shadow:inset 0 0 52px rgba(64,144,232,.5); }
+    }
+
+    .combatant { display:flex; flex-direction:column; align-items:center; gap:12px; }
+
+    /* ── Forger (CSS Knight) ── */
+    .player-sprite { width:54px; height:82px; position:relative; }
+    .ps-helm {
+      width:28px; height:13px; background:#8a9ab8;
+      border-radius:5px 5px 0 0; margin:0 auto;
+    }
+    .ps-helm::before {
+      content:''; position:absolute;
+      width:20px; height:4px; background:var(--gold);
+      border-radius:2px; top:9px; left:5px;
+    }
+    .ps-head { width:26px; height:18px; background:#c8a070; margin:0 auto; }
+    .ps-body {
+      width:36px; height:28px; background:#7a8aaa;
+      border-radius:3px; margin:0 auto; position:relative;
+    }
+    .ps-body::before { /* shield */
+      content:''; position:absolute;
+      width:13px; height:20px; background:var(--blue);
+      border-radius:2px 2px 5px 5px;
+      left:-14px; top:2px;
+      border:2px solid #1c3a70;
+      box-shadow:-2px 2px 5px rgba(0,0,0,.4);
+    }
+    .ps-body::after { /* sword */
+      content:''; position:absolute;
+      width:4px; height:36px;
+      background:linear-gradient(to bottom, #f0f0f8, #909090);
+      border-radius:2px 2px 0 0;
+      right:-6px; top:-22px;
+      box-shadow:1px 0 4px rgba(0,0,0,.5);
+    }
+    .ps-legs { display:flex; gap:5px; width:30px; margin:2px auto 0; }
+    .ps-leg  { width:12px; height:20px; background:#60708a; border-radius:2px; }
+
+    /* ── Shadow Apprentice (Lvl 1) ── */
+    .em1-sprite { width:54px; height:82px; position:relative; transform:scaleX(-1); }
+    .em1-hat {
+      width:0; height:0;
+      border-left:16px solid transparent;
+      border-right:16px solid transparent;
+      border-bottom:28px solid #22104a;
+      margin:0 auto; position:relative;
+    }
+    .em1-hat::after {
+      content:''; position:absolute;
+      width:40px; height:7px; background:#2e1860;
+      border-radius:2px; bottom:-7px; left:-20px;
+    }
+    .em1-head {
+      width:26px; height:24px; background:#b0a0d0;
+      border-radius:50%; margin:2px auto 0; position:relative;
+    }
+    .em1-head::after {
+      content:''; position:absolute;
+      width:18px; height:4px; background:var(--purple);
+      border-radius:3px; top:9px; left:4px;
+      box-shadow:0 0 7px var(--purple);
+    }
+    .em1-robe {
+      width:38px; height:32px; background:#1e0e42;
+      border-radius:4px 4px 8px 8px; margin:0 auto; position:relative;
+    }
+    .em1-robe::before {
+      content:''; position:absolute;
+      width:12px; height:12px;
+      background:radial-gradient(circle at 35% 35%, #e080ff, #6010b0);
+      border-radius:50%; right:-8px; top:6px;
+      box-shadow:0 0 10px var(--purple);
+      animation:orbFloat 2s ease-in-out infinite;
+    }
+    @keyframes orbFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+    .em1-legs { display:flex; gap:5px; width:26px; margin:2px auto 0; }
+    .em1-leg  { width:10px; height:16px; background:#160a36; border-radius:2px; }
+
+    /* ── Void Sorcerer (Lvl 2) ── */
+    .em2-sprite { width:54px; height:82px; position:relative; transform:scaleX(-1); }
+    .em2-helm {
+      width:30px; height:10px; background:#101840;
+      border-radius:3px 3px 0 0; margin:0 auto; position:relative;
+    }
+    .em2-helm::after {
+      content:''; position:absolute;
+      width:8px; height:16px; background:#101840;
+      left:50%; transform:translateX(-50%); top:-14px;
+      border-radius:2px 2px 0 0;
+    }
+    .em2-head {
+      width:26px; height:22px; background:#8090c0;
+      border-radius:50%; margin:0 auto; position:relative;
+    }
+    .em2-head::after {
+      content:''; position:absolute;
+      width:18px; height:4px; background:var(--blue);
+      border-radius:3px; top:9px; left:4px;
+      box-shadow:0 0 8px var(--blue), 0 0 14px rgba(64,144,232,.5);
+    }
+    .em2-body {
+      width:38px; height:30px; background:#0c1230;
+      border-radius:4px 4px 6px 6px; margin:0 auto; position:relative;
+    }
+    .em2-body::before {
+      content:''; position:absolute;
+      width:10px; height:36px; background:#0c1230;
+      border:1px solid #2040a0; border-radius:2px;
+      right:-12px; top:-10px;
+    }
+    .em2-body::after {
+      content:''; position:absolute;
+      width:14px; height:14px;
+      background:radial-gradient(circle at 40% 40%, #90d0ff, #2060c0);
+      border-radius:50%; right:-18px; top:-16px;
+      box-shadow:0 0 12px var(--blue), 0 0 22px rgba(64,144,232,.5);
+      animation:orbFloat2 1.5s ease-in-out infinite;
+    }
+    @keyframes orbFloat2 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+    .em2-legs { display:flex; gap:5px; width:28px; margin:2px auto 0; }
+    .em2-leg  { width:11px; height:16px; background:#080c22; border-radius:2px; }
+
+    /* ── Monster Mage (Boss) ── */
+    .em3-sprite { width:64px; height:94px; position:relative; transform:scaleX(-1); }
+    .em3-crown {
+      width:36px; margin:0 auto; position:relative; height:18px;
+    }
+    .em3-crown::before {
+      content:''; position:absolute;
+      width:36px; height:10px; background:#5a0010;
+      border-radius:2px; bottom:0; left:0;
+    }
+    .em3-crown::after {
+      content:''; position:absolute;
+      width:0; height:0;
+      border-left:6px solid transparent;
+      border-right:6px solid transparent;
+      border-bottom:14px solid #900020;
+      top:0; left:12px;
+      filter:drop-shadow(0 0 6px rgba(232,64,64,.7));
+    }
+    .em3-head {
+      width:32px; height:28px; background:#3a1520;
+      border-radius:50%; margin:0 auto; position:relative;
+    }
+    .em3-head::after {
+      content:''; position:absolute;
+      width:22px; height:6px; background:var(--red);
+      border-radius:3px; top:11px; left:5px;
+      box-shadow:0 0 10px var(--red), 0 0 22px rgba(232,64,64,.6);
+    }
+    .em3-body {
+      width:46px; height:38px; background:#280810;
+      border-radius:4px 4px 8px 8px; margin:0 auto; position:relative;
+      border:1px solid #600018;
+    }
+    .em3-body::before {
+      content:''; position:absolute;
+      width:18px; height:18px;
+      background:radial-gradient(circle at 35% 35%, #ff8090, #c00030);
+      border-radius:50%; right:-12px; top:4px;
+      box-shadow:0 0 18px var(--red), 0 0 34px rgba(232,64,64,.5);
+      animation:bossOrb 1s ease-in-out infinite;
+    }
+    @keyframes bossOrb {
+      0%,100%{ transform:translateY(0) scale(1); box-shadow:0 0 18px var(--red), 0 0 34px rgba(232,64,64,.5); }
+      50%    { transform:translateY(-5px) scale(1.12); box-shadow:0 0 28px var(--red), 0 0 50px rgba(232,64,64,.7); }
+    }
+    .em3-body::after {
+      content:''; position:absolute;
+      width:10px; height:42px;
+      background:linear-gradient(to bottom, #600018, #3a0010);
+      border-radius:2px;
+      left:-12px; top:-4px;
+      box-shadow:-2px 0 8px rgba(200,0,40,.3);
+    }
+    .em3-legs { display:flex; gap:7px; width:34px; margin:2px auto 0; }
+    .em3-leg  { width:14px; height:22px; background:#1e0808; border-radius:2px; border:1px solid #400010; }
+
+    /* Shake animations */
+    .shake-hit  { animation:shakeHit .4s ease; }
+    @keyframes shakeHit { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-9px)} 40%{transform:translateX(9px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
+    .enemy-combatant .shake-inner { transition:transform 0s; }
+    .shake-enemy { animation:shakeEnemy .4s ease; }
+    @keyframes shakeEnemy { 0%,100%{transform:translateX(0)} 20%{transform:translateX(9px)} 40%{transform:translateX(-9px)} 60%{transform:translateX(5px)} 80%{transform:translateX(-5px)} }
+    .heal-flash { animation:healFlash .5s ease; }
+    @keyframes healFlash { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    .vs-text {
+      font-family:'Press Start 2P', monospace;
+      font-size:14px; color:var(--gold);
+      text-shadow:2px 2px 0 var(--gold-dim);
+      align-self:center; text-align:center;
+    }
+
+    /* ── Stat bars ── */
+    .c-info { width:100%; }
+    .c-name {
+      font-family:'Press Start 2P', monospace;
+      font-size:7px; margin-bottom:7px; letter-spacing:.5px;
+    }
+    .c-name.left  { color:var(--blue); }
+    .c-name.right { color:var(--red); text-align:right; }
+
+    .bar-row {
+      display:flex; justify-content:space-between;
+      font-size:9px; color:var(--muted); margin-bottom:2px;
+    }
+    .bar-track {
+      width:100%; height:11px; background:#0a0a18;
+      border-radius:6px; overflow:hidden;
+      border:1px solid var(--border); margin-bottom:6px;
+    }
+    .bar-fill {
+      height:100%; border-radius:6px;
+      transition:width .45s cubic-bezier(.4,0,.2,1);
+    }
+    .hp-bar  { background:linear-gradient(90deg,#b03030,#e06030); }
+    .hp-bar.low { background:linear-gradient(90deg,#601010,#a02020); animation:hpBlink .7s ease-in-out infinite; }
+    @keyframes hpBlink { 0%,100%{opacity:1} 50%{opacity:.5} }
+    .sp-bar  { background:linear-gradient(90deg,#4810a0,#9050e8); }
+
+    .defend-tag {
+      font-family:'Press Start 2P', monospace;
+      font-size:6px; padding:3px 7px;
+      background:var(--blue-bg); border:1px solid var(--blue);
+      color:var(--blue); border-radius:4px;
+      display:none;
+    }
+    .defend-tag.show { display:inline-block; animation:fadeIn .2s ease; }
+    .defend-tag.right { float:right; clear:both; }
+
+    /* ── Combat log ── */
+    .log-box {
+      background:#06060e; border:1px solid var(--border);
+      border-radius:8px; padding:10px 13px;
+      height:96px; overflow-y:auto;
+      margin-bottom:11px; font-size:12px; line-height:1.75;
+      scrollbar-width:thin; scrollbar-color:var(--border) transparent;
+    }
+    .log-box::-webkit-scrollbar { width:4px; }
+    .log-box::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+    .log-entry   { color:var(--muted); }
+    .log-player  { color:#80b8ff; }
+    .log-enemy   { color:#ff9090; }
+    .log-dmg     { color:#f0c060; }
+    .log-heal    { color:var(--green); }
+    .log-special { color:var(--purple); }
+    .log-sys     { color:var(--gold); font-family:'Press Start 2P', monospace; font-size:7px; }
+    .log-boss    { color:var(--red); font-family:'Press Start 2P', monospace; font-size:7px; }
+    .log-reward  { color:var(--teal); }
+
+    /* ── Action buttons (4 grid) ── */
+    .action-panel {
+      display:grid; grid-template-columns:repeat(4,1fr); gap:8px;
+    }
+    .btn-action {
+      padding:12px 6px 10px; border-radius:8px; border:2px solid;
+      background:transparent; cursor:pointer; transition:all .15s;
+      font-family:'Press Start 2P', monospace; font-size:7px;
+      letter-spacing:.3px; position:relative; overflow:hidden;
+    }
+    .btn-action::before {
+      content:''; position:absolute; inset:0; opacity:0; transition:opacity .15s;
+    }
+    .btn-action:hover:not(:disabled)::before { opacity:.1; }
+    .btn-action:active:not(:disabled) { transform:scale(.97); }
+    .btn-action:disabled { opacity:.3; cursor:not-allowed; }
+
+    .btn-atk  { border-color:var(--red);    color:var(--red); }
+    .btn-atk::before  { background:var(--red); }
+    .btn-atk:hover:not(:disabled)  { box-shadow:0 0 16px rgba(232,64,64,.4); }
+
+    .btn-def  { border-color:var(--blue);   color:var(--blue); }
+    .btn-def::before  { background:var(--blue); }
+    .btn-def:hover:not(:disabled)  { box-shadow:0 0 16px rgba(64,144,232,.4); }
+
+    .btn-spc  { border-color:var(--purple); color:var(--purple); }
+    .btn-spc::before  { background:var(--purple); }
+    .btn-spc:hover:not(:disabled)  { box-shadow:0 0 16px rgba(160,80,240,.4); }
+
+    .btn-heal { border-color:var(--green);  color:var(--green); }
+    .btn-heal::before { background:var(--green); }
+    .btn-heal:hover:not(:disabled) { box-shadow:0 0 16px rgba(64,200,112,.4); }
+
+    .btn-icon { font-size:18px; display:block; margin-bottom:6px; }
+    .btn-cost { font-size:6px; color:var(--muted); margin-top:4px; opacity:.8; display:block; }
+
+
+    /* ══════════════════════
+       LEVEL CLEAR SCREEN
+    ══════════════════════ */
+    #levelclear-screen { text-align:center; }
+
+    .lc-title {
+      font-family:'Press Start 2P', monospace;
+      font-size:clamp(16px,4vw,26px); color:var(--gold);
+      text-shadow:0 0 24px rgba(240,192,64,.6), 3px 3px 0 var(--gold-dim);
+      margin-bottom:6px;
+    }
+    .lc-sub {
+      font-size:13px; color:var(--muted);
+      font-style:italic; margin-bottom:22px;
+    }
+
+    .reward-grid {
+      display:grid; grid-template-columns:repeat(2,1fr);
+      gap:10px; margin-bottom:22px;
+    }
+    .reward-card {
+      background:var(--panel); border:1px solid var(--border);
+      border-radius:8px; padding:14px 12px; text-align:center;
+    }
+    .reward-val {
+      font-family:'Press Start 2P', monospace;
+      font-size:16px; margin-bottom:5px;
+    }
+    .rv-hp   { color:var(--green); }
+    .rv-sp   { color:var(--purple); }
+    .rv-mhp  { color:var(--gold); }
+    .rv-msp  { color:var(--blue); }
+    .reward-lbl { font-size:10px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; }
+
+    .next-preview {
+      background:var(--panel); border:1px solid var(--border);
+      border-radius:10px; padding:16px 18px;
+      margin-bottom:20px; display:flex;
+      align-items:center; gap:16px; text-align:left;
+    }
+    .np-label {
+      font-family:'Press Start 2P', monospace;
+      font-size:7px; color:var(--muted);
+      letter-spacing:2px; margin-bottom:6px;
+    }
+    .np-name {
+      font-family:'Press Start 2P', monospace;
+      font-size:9px; margin-bottom:8px;
+    }
+    .np-stats { font-size:11px; color:var(--muted); }
+
+    .lc-btns { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+
+
+    /* ══════════════════════
+       GAME OVER SCREEN
+    ══════════════════════ */
+    #gameover-screen { text-align:center; }
+
+    .result-title {
+      font-family:'Press Start 2P', monospace;
+      font-size:clamp(20px,5vw,36px); line-height:1.3; margin-bottom:8px;
+    }
+    .r-win  { color:var(--gold); text-shadow:0 0 32px rgba(240,192,64,.7); }
+    .r-lose { color:var(--red);  text-shadow:0 0 32px rgba(232,64,64,.7); }
+
+    .result-sub {
+      font-size:11px; color:var(--muted);
+      letter-spacing:3px; text-transform:uppercase; margin-bottom:28px;
+    }
+
+    .stats-row {
+      display:grid; grid-template-columns:repeat(3,1fr);
+      gap:10px; margin:0 0 28px;
+    }
+    .stat-card {
+      background:var(--panel); border:1px solid var(--border);
+      border-radius:9px; padding:16px 8px 12px;
+    }
+    .stat-val {
+      font-family:'Press Start 2P', monospace;
+      font-size:20px; color:var(--gold); margin-bottom:7px;
+    }
+    .stat-lbl { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+
+    .btn-outline {
+      font-family:'Press Start 2P', monospace;
+      font-size:9px; padding:13px 24px;
+      background:transparent; border:2px solid;
+      border-radius:7px; cursor:pointer;
+      transition:all .15s; margin:4px;
+    }
+    .btn-gold  { border-color:var(--gold);   color:var(--gold); }
+    .btn-gold:hover  { background:var(--gold);  color:#160e00; box-shadow:0 0 22px rgba(240,192,64,.4); }
+    .btn-muted { border-color:var(--border); color:var(--muted); }
+    .btn-muted:hover { border-color:var(--muted); color:var(--text); }
+
+    /* Floating damage number */
+    .dmg-float {
+      position:fixed;
+      font-family:'Press Start 2P', monospace;
+      font-size:14px; pointer-events:none; z-index:9999;
+      animation:floatUp 1.1s ease forwards;
+      text-shadow:0 2px 6px rgba(0,0,0,.8);
+    }
+    @keyframes floatUp {
+      0%  { opacity:1; transform:translateY(0) scale(1); }
+      70% { opacity:1; transform:translateY(-52px) scale(1.1); }
+      100%{ opacity:0; transform:translateY(-72px) scale(.9); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ MENU ══ -->
+<div id="menu-screen" class="screen active">
+  <div class="game-title">BATTLE<br>FORGE</div>
+  <div class="game-sub">3-Level Campaign · Turn-Based</div>
+
+  <div class="menu-art">
+    <div class="sword sword-1"></div>
+    <div class="sword sword-2"></div>
+  </div>
+
+  <div class="level-pills">
+    <span class="lvl-pill lp-1">LVL 1 · SHADOW APPRENTICE</span>
+    <span class="lvl-pill lp-2">LVL 2 · VOID SORCERER</span>
+    <span class="lvl-pill lp-3">BOSS · MONSTER MAGE</span>
+  </div>
+
+  <div class="howto">
+    <div class="howto-title">⚔ COMBAT GUIDE</div>
+    <div class="move-row">
+      <span class="move-tag tag-atk">ATTACK</span>
+      <span class="move-desc">Strike for <strong style="color:var(--red)">15–25 damage</strong>. Free to use — your reliable action every turn.</span>
+    </div>
+    <div class="move-row">
+      <span class="move-tag tag-def">DEFEND</span>
+      <span class="move-desc">Halve incoming damage and recover <strong style="color:var(--green)">+5 HP +5 SP</strong> this turn.</span>
+    </div>
+    <div class="move-row">
+      <span class="move-tag tag-spc">SPECIAL</span>
+      <span class="move-desc">Devastating blow for <strong style="color:var(--purple)">30–45 damage</strong> — costs <strong style="color:var(--purple)">10 SP</strong>.</span>
+    </div>
+    <div class="move-row">
+      <span class="move-tag tag-heal">HEAL</span>
+      <span class="move-desc">Restore <strong style="color:var(--green)">30–45 HP</strong> — costs <strong style="color:var(--green)">15 SP</strong>. Crucial in later levels.</span>
+    </div>
+  </div>
+
+  <button class="btn-primary" onclick="startRun()">▶ START CAMPAIGN</button>
+</div>
+
+
+<!-- ══ BATTLE ══ -->
+<div id="battle-screen" class="screen">
+  <div class="battle-topbar">
+    <div id="turn-pill" class="turn-pill pill-player">YOUR TURN</div>
+    <div class="progress-bar" id="prog-bar"></div>
+  </div>
+
+  <div class="arena">
+    <div id="player-shield"></div>
+
+    <!-- Forger (left) -->
+    <div class="combatant" id="player-combatant">
+      <div class="player-sprite" id="p-sprite">
+        <div class="ps-helm"></div>
+        <div class="ps-head"></div>
+        <div class="ps-body"></div>
+        <div class="ps-legs"><div class="ps-leg"></div><div class="ps-leg"></div></div>
+      </div>
+      <div class="c-info">
+        <div class="c-name left">FORGER</div>
+        <div class="bar-row"><span>HP</span><span id="php-txt">130/130</span></div>
+        <div class="bar-track"><div class="bar-fill hp-bar" id="php-bar" style="width:100%"></div></div>
+        <div class="bar-row"><span>SP</span><span id="psp-txt">40/40</span></div>
+        <div class="bar-track"><div class="bar-fill sp-bar" id="psp-bar" style="width:100%"></div></div>
+        <div class="defend-tag" id="p-def-tag">🛡 DEFENDING</div>
+      </div>
+    </div>
+
+    <div class="vs-text">VS</div>
+
+    <!-- Enemy (right) -->
+    <div class="combatant enemy-combatant" id="enemy-combatant">
+      <div id="e-sprite"></div>
+      <div class="c-info" style="text-align:right">
+        <div class="c-name right" id="e-name">SHADOW APPRENTICE</div>
+        <div class="bar-row" style="flex-direction:row-reverse"><span>HP</span><span id="ehp-txt">80/80</span></div>
+        <div class="bar-track"><div class="bar-fill hp-bar" id="ehp-bar" style="width:100%"></div></div>
+        <div class="bar-row" style="flex-direction:row-reverse"><span>SP</span><span id="esp-txt">20/20</span></div>
+        <div class="bar-track"><div class="bar-fill sp-bar" id="esp-bar" style="width:100%"></div></div>
+        <div class="defend-tag right" id="e-def-tag">🛡 BRACED</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Log -->
+  <div class="log-box" id="log-box"></div>
+
+  <!-- Actions -->
+  <div class="action-panel">
+    <button class="btn-action btn-atk" id="btn-atk" onclick="playerAct('attack')">
+      <span class="btn-icon">⚔️</span>ATTACK
+    </button>
+    <button class="btn-action btn-def" id="btn-def" onclick="playerAct('defend')">
+      <span class="btn-icon">🛡️</span>DEFEND
+    </button>
+    <button class="btn-action btn-spc" id="btn-spc" onclick="playerAct('special')">
+      <span class="btn-icon">✨</span>SPECIAL
+      <span class="btn-cost">10 SP</span>
+    </button>
+    <button class="btn-action btn-heal" id="btn-heal" onclick="playerAct('heal')">
+      <span class="btn-icon">💚</span>HEAL
+      <span class="btn-cost">15 SP</span>
+    </button>
+  </div>
+</div>
+
+
+<!-- ══ LEVEL CLEAR ══ -->
+<div id="levelclear-screen" class="screen">
+  <div class="lc-title" id="lc-title">LEVEL 1 CLEAR!</div>
+  <div class="lc-sub" id="lc-sub">The mage crumbles to dust.</div>
+
+  <div class="reward-grid">
+    <div class="reward-card">
+      <div class="reward-val rv-hp" id="r-hp">+0</div>
+      <div class="reward-lbl">HP Restored</div>
+    </div>
+    <div class="reward-card">
+      <div class="reward-val rv-sp" id="r-sp">+0</div>
+      <div class="reward-lbl">SP Restored</div>
+    </div>
+    <div class="reward-card">
+      <div class="reward-val rv-mhp" id="r-mhp">+0</div>
+      <div class="reward-lbl">Max HP Bonus</div>
+    </div>
+    <div class="reward-card">
+      <div class="reward-val rv-msp" id="r-msp">+0</div>
+      <div class="reward-lbl">Max SP Bonus</div>
+    </div>
+  </div>
+
+  <div class="next-preview" id="next-preview">
+    <div>
+      <div class="np-label">NEXT ENEMY</div>
+      <div class="np-name" id="np-name">VOID SORCERER</div>
+      <div class="np-stats" id="np-stats">HP: 120 · ATK: 14–26</div>
+    </div>
+  </div>
+
+  <div class="lc-btns">
+    <button class="btn-outline btn-gold" id="lc-next-btn" onclick="nextLevel()">NEXT LEVEL ▶</button>
+    <button class="btn-outline btn-muted" onclick="showScreen('menu-screen')">⟵ MENU</button>
+  </div>
+</div>
+
+
+<!-- ══ GAME OVER ══ -->
+<div id="gameover-screen" class="screen">
+  <div id="r-title" class="result-title"></div>
+  <div id="r-sub"   class="result-sub"></div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-val" id="s-level">1</div><div class="stat-lbl">Level Reached</div></div>
+    <div class="stat-card"><div class="stat-val" id="s-turns">0</div><div class="stat-lbl">Turns Fought</div></div>
+    <div class="stat-card"><div class="stat-val" id="s-hp">0</div><div class="stat-lbl">HP Remaining</div></div>
+  </div>
+  <button class="btn-outline btn-gold"  onclick="startRun()">▶ PLAY AGAIN</button>
+  <button class="btn-outline btn-muted" onclick="showScreen('menu-screen')">⟵ MENU</button>
+</div>
+
+
+<script>
+/* ─────────────────────────────
+   LEVEL DATA
+───────────────────────────── */
+const LEVELS = [
+  {
+    id:1, name:'SHADOW APPRENTICE', cls:'l1',
+    eMaxHP:80,  eMaxSP:20,
+    atkMin:10,  atkMax:18,
+    spcMin:20,  spcMax:30,
+    healChance:0,
+    hpReward:30, spReward:15, maxHpBonus:15, maxSpBonus:5,
+    sprite:'em1',
+    openingMsg: 'The Shadow Apprentice steps from the darkness!'
+  },
+  {
+    id:2, name:'VOID SORCERER', cls:'l2',
+    eMaxHP:120, eMaxSP:30,
+    atkMin:14,  atkMax:26,
+    spcMin:30,  spcMax:46,
+    healChance:0.18,
+    hpReward:40, spReward:20, maxHpBonus:20, maxSpBonus:8,
+    sprite:'em2',
+    openingMsg: 'The Void Sorcerer tears open a rift and emerges!'
+  },
+  {
+    id:3, name:'MONSTER MAGE', cls:'l3',
+    eMaxHP:180, eMaxSP:55,
+    atkMin:20,  atkMax:34,
+    spcMin:42,  spcMax:60,
+    healChance:0.28,
+    hpReward:0,  spReward:0, maxHpBonus:0, maxSpBonus:0,
+    sprite:'em3',
+    openingMsg: '⚠ THE MONSTER MAGE AWAKENS. This is the final stand, Forger!'
+  }
+];
+
+const BASE_HP = 130, BASE_SP = 40;
+
+/* ─────────────────────────────
+   STATE
+───────────────────────────── */
+let G = {};
+let pendingRewards = {};
+
+function initRun() {
+  G = {
+    level: 0,
+    pHP: BASE_HP, pMaxHP: BASE_HP,
+    pSP: BASE_SP, pMaxSP: BASE_SP,
+    pDef: false,
+    eHP: 0, eSP: 0,
+    eDef: false,
+    turn: 'player', turnN: 1,
+    totalTurns: 0,
+    busy: false
+  };
+}
+
+/* ─────────────────────────────
+   UTILS
+───────────────────────────── */
+const rand = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+const clamp = (v,lo,hi) => Math.max(lo,Math.min(hi,v));
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el = document.getElementById(id);
+  el.classList.add('active','fade-in');
+  setTimeout(()=>el.classList.remove('fade-in'),500);
+}
+
+/* ─────────────────────────────
+   LOG
+───────────────────────────── */
+function log(msg, cls='log-entry') {
+  const box = document.getElementById('log-box');
+  const el = document.createElement('div');
+  el.className = cls; el.textContent = msg;
+  box.appendChild(el);
+  box.scrollTop = box.scrollHeight;
+}
+function clearLog() { document.getElementById('log-box').innerHTML=''; }
+
+/* ─────────────────────────────
+   UI REFRESH
+───────────────────────────── */
+function refreshUI() {
+  const lv = LEVELS[G.level];
+  const pPct = clamp(G.pHP/G.pMaxHP*100,0,100);
+  const pSpPct = clamp(G.pSP/G.pMaxSP*100,0,100);
+  const ePct = clamp(G.eHP/lv.eMaxHP*100,0,100);
+  const eSpPct = clamp(G.eSP/lv.eMaxSP*100,0,100);
+
+  document.getElementById('php-bar').style.width = pPct+'%';
+  document.getElementById('php-bar').className = 'bar-fill hp-bar'+(pPct<=25?' low':'');
+  document.getElementById('psp-bar').style.width = pSpPct+'%';
+  document.getElementById('php-txt').textContent = Math.max(0,G.pHP)+'/'+G.pMaxHP;
+  document.getElementById('psp-txt').textContent = Math.max(0,G.pSP)+'/'+G.pMaxSP;
+
+  document.getElementById('ehp-bar').style.width = ePct+'%';
+  document.getElementById('ehp-bar').className = 'bar-fill hp-bar'+(ePct<=25?' low':'');
+  document.getElementById('esp-bar').style.width = eSpPct+'%';
+  document.getElementById('ehp-txt').textContent = Math.max(0,G.eHP)+'/'+lv.eMaxHP;
+  document.getElementById('esp-txt').textContent = Math.max(0,G.eSP)+'/'+lv.eMaxSP;
+
+  document.getElementById('turn-pill').textContent = G.turn==='player'?'YOUR TURN':'ENEMY TURN';
+  document.getElementById('turn-pill').className = 'turn-pill '+(G.turn==='player'?'pill-player':'pill-enemy');
+
+  buildProgBar();
+}
+
+function buildProgBar() {
+  document.getElementById('prog-bar').innerHTML = LEVELS.map((l,i)=>{
+    const state = i < G.level ? 'done' : i === G.level ? 'active' : '';
+    return `<div class="pb-pip ${state}"></div>`;
+  }).join('') + `<span class="pb-label">TURN ${G.turnN}</span>`;
+}
+
+function setBtns(enabled) {
+  document.getElementById('btn-atk').disabled  = !enabled;
+  document.getElementById('btn-def').disabled  = !enabled;
+  document.getElementById('btn-spc').disabled  = !enabled || G.pSP < 10;
+  document.getElementById('btn-heal').disabled = !enabled || G.pSP < 15;
+}
+
+/* ─────────────────────────────
+   ENEMY SPRITE
+───────────────────────────── */
+function buildSprite(lvIdx) {
+  const s = LEVELS[lvIdx].sprite;
+  const container = document.getElementById('e-sprite');
+  if (s === 'em1') {
+    container.innerHTML = `
+      <div class="em1-sprite">
+        <div class="em1-hat"></div>
+        <div class="em1-head"></div>
+        <div class="em1-robe"></div>
+        <div class="em1-legs"><div class="em1-leg"></div><div class="em1-leg"></div></div>
+      </div>`;
+  } else if (s === 'em2') {
+    container.innerHTML = `
+      <div class="em2-sprite">
+        <div class="em2-helm"></div>
+        <div class="em2-head"></div>
+        <div class="em2-body"></div>
+        <div class="em2-legs"><div class="em2-leg"></div><div class="em2-leg"></div></div>
+      </div>`;
+  } else {
+    container.innerHTML = `
+      <div class="em3-sprite">
+        <div class="em3-crown"></div>
+        <div class="em3-head"></div>
+        <div class="em3-body"></div>
+        <div class="em3-legs"><div class="em3-leg"></div><div class="em3-leg"></div></div>
+      </div>`;
+  }
+}
+
+/* ─────────────────────────────
+   ANIMATIONS
+───────────────────────────── */
+function shakeEl(elId, isEnemy=false) {
+  const el = document.getElementById(elId);
+  el.classList.remove('shake-hit','shake-enemy','heal-flash');
+  void el.offsetWidth;
+  el.classList.add(isEnemy ? 'shake-enemy' : 'shake-hit');
+  setTimeout(()=>el.classList.remove('shake-hit','shake-enemy'),500);
+}
+
+function healAnim(elId) {
+  const el = document.getElementById(elId);
+  el.classList.remove('heal-flash');
+  void el.offsetWidth;
+  el.classList.add('heal-flash');
+  setTimeout(()=>el.classList.remove('heal-flash'),600);
+}
+
+function floatNum(val, target, color, isHeal=false) {
+  const arena = document.querySelector('.arena');
+  const rect = arena.getBoundingClientRect();
+  const el = document.createElement('div');
+  el.className = 'dmg-float';
+  el.textContent = (isHeal?'+':'-') + val;
+  el.style.color = color;
+  el.style.left = (target==='enemy' ? rect.right - 80 : rect.left + 20) + 'px';
+  el.style.top  = (rect.top + 28) + 'px';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), 1200);
+}
+
+function setDefTag(side, show) {
+  document.getElementById(side==='p'?'p-def-tag':'e-def-tag').classList.toggle('show', show);
+  if (side==='p') document.getElementById('player-shield').classList.toggle('on', show);
+}
+
+/* ─────────────────────────────
+   START RUN / LEVEL
+───────────────────────────── */
+function startRun() {
+  initRun();
+  beginLevel();
+}
+
+function beginLevel() {
+  const lv = LEVELS[G.level];
+  G.eHP = lv.eMaxHP; G.eSP = lv.eMaxSP;
+  G.pDef = false; G.eDef = false;
+  G.turn = 'player'; G.turnN = 1; G.busy = false;
+
+  setDefTag('p', false); setDefTag('e', false);
+  document.getElementById('e-name').textContent = lv.name;
+  buildSprite(G.level);
+  clearLog();
+  log('⚔ BATTLE START!', 'log-sys');
+  log(lv.openingMsg, 'log-enemy');
+  if (lv.id === 3) log('⚠ Enrages below 25% HP — end it quickly!', 'log-boss');
+  refreshUI();
+  setBtns(true);
+  showScreen('battle-screen');
+}
+
+/* ─────────────────────────────
+   AI DECISION
+───────────────────────────── */
+function aiDecide() {
+  const lv = LEVELS[G.level];
+  const hasSP = G.eSP >= 10;
+  const canHeal = G.eSP >= 15 && lv.healChance > 0;
+  const eLow = G.eHP < lv.eMaxHP * 0.3;
+  const pLow = G.pHP < G.pMaxHP * 0.3;
+
+  let w = { attack:40, defend:25, special:30, heal:5 };
+  if (!hasSP) { w.special = 0; w.attack += 20; }
+  if (!canHeal) { w.heal = 0; }
+  if (eLow) { w.heal += lv.healChance * 70; w.defend += 15; w.attack -= 10; }
+  if (pLow) { w.attack += 30; w.special += 20; w.defend -= 25; w.heal -= 15; }
+  if (lv.id === 3) { w.attack += 15; w.special += 10; }
+  if (lv.id === 3 && G.eHP < lv.eMaxHP * 0.4) { w.attack += 20; w.special += 20; }
+
+  Object.keys(w).forEach(k => { w[k] = Math.max(0, w[k]); });
+  const total = Object.values(w).reduce((a,b)=>a+b, 0);
+  if (total === 0) return 'attack';
+
+  let r = rand(0, total-1);
+  for (const [k,v] of Object.entries(w)) { if (r < v) return k; r -= v; }
+  return 'attack';
+}
+
+/* ─────────────────────────────
+   PLAYER ACTION
+───────────────────────────── */
+function playerAct(action) {
+  if (G.busy || G.turn !== 'player') return;
+  G.busy = true; setBtns(false);
+
+  const lv = LEVELS[G.level];
+  G.pDef = false; setDefTag('p', false);
+
+  if (action === 'attack') {
+    let dmg = rand(15, 25);
+    if (G.eDef) { dmg = Math.ceil(dmg/2); log(`Your attack is deflected! (halved → ${dmg} dmg)`, 'log-dmg'); }
+    else { log(`Forger strikes ${lv.name} for ${dmg} damage!`, 'log-player'); }
+    G.eHP = Math.max(0, G.eHP - dmg);
+    shakeEl('enemy-combatant', true);
+    floatNum(dmg, 'enemy', '#e87070');
+
+  } else if (action === 'defend') {
+    G.pDef = true; setDefTag('p', true);
+    const heal = 5; const spReg = 5;
+    G.pHP = Math.min(G.pMaxHP, G.pHP + heal);
+    G.pSP = Math.min(G.pMaxSP, G.pSP + spReg);
+    log('Forger raises shield! +5 HP, +5 SP recovered.', 'log-heal');
+    floatNum(heal, 'player', '#40c870', true);
+    healAnim('player-combatant');
+
+  } else if (action === 'special') {
+    if (G.pSP < 10) { G.busy=false; setBtns(true); return; }
+    G.pSP -= 10;
+    let dmg = rand(30, 45);
+    if (G.eDef) { dmg = Math.ceil(dmg/2); log(`✨ POWER SLASH — blocked! ${dmg} damage dealt.`, 'log-special'); }
+    else { log(`✨ POWER SLASH — ${dmg} devastating damage!`, 'log-special'); }
+    G.eHP = Math.max(0, G.eHP - dmg);
+    shakeEl('enemy-combatant', true);
+    floatNum(dmg, 'enemy', '#c080f0');
+
+  } else if (action === 'heal') {
+    if (G.pSP < 15) { G.busy=false; setBtns(true); return; }
+    G.pSP -= 15;
+    const h = rand(30, 45);
+    G.pHP = Math.min(G.pMaxHP, G.pHP + h);
+    log(`💚 Forger channels healing light! +${h} HP restored.`, 'log-heal');
+    floatNum(h, 'player', '#40c870', true);
+    healAnim('player-combatant');
+  }
+
+  refreshUI();
+  if (checkEnd()) return;
+  G.turn = 'enemy'; refreshUI();
+  setTimeout(enemyTurn, 1200);
+}
+
+/* ─────────────────────────────
+   ENEMY TURN
+───────────────────────────── */
+function enemyTurn() {
+  const lv = LEVELS[G.level];
+  G.eDef = false; setDefTag('e', false);
+  const ai = aiDecide();
+
+  if (ai === 'attack') {
+    let dmg = rand(lv.atkMin, lv.atkMax);
+    if (G.pDef) {
+      dmg = Math.ceil(dmg/2);
+      log(`${lv.name} attacks! Shield holds — ${dmg} damage taken.`, 'log-enemy');
+      G.pDef = false; setDefTag('p', false);
+    } else {
+      log(`${lv.name} strikes Forger for ${dmg} damage!`, 'log-enemy');
+    }
+    G.pHP = Math.max(0, G.pHP - dmg);
+    shakeEl('player-combatant');
+    floatNum(dmg, 'player', '#e87070');
+
+  } else if (ai === 'defend') {
+    G.eDef = true; setDefTag('e', true);
+    const heal = 5;
+    G.eHP = Math.min(lv.eMaxHP, G.eHP + heal);
+    log(`${lv.name} braces and recovers ${heal} HP!`, 'log-enemy');
+
+  } else if (ai === 'special') {
+    G.eSP -= 10;
+    let dmg = rand(lv.spcMin, lv.spcMax);
+    if (G.pDef) {
+      dmg = Math.ceil(dmg/2);
+      log(`✨ ${lv.name} unleashes dark power! Shield saves you — ${dmg} damage!`, 'log-special');
+      G.pDef = false; setDefTag('p', false);
+    } else {
+      log(`✨ ${lv.name} unleashes ${dmg} dark damage!`, 'log-special');
+    }
+    G.pHP = Math.max(0, G.pHP - dmg);
+    shakeEl('player-combatant');
+    floatNum(dmg, 'player', '#c080f0');
+
+  } else if (ai === 'heal') {
+    G.eSP -= 15;
+    const h = rand(28, 42);
+    G.eHP = Math.min(lv.eMaxHP, G.eHP + h);
+    log(`${lv.name} heals for ${h} HP!`, 'log-enemy');
+    healAnim('enemy-combatant');
+    floatNum(h, 'enemy', '#40c870', true);
+  }
+
+  G.turnN++; G.totalTurns++; G.turn = 'player';
+  refreshUI();
+  if (checkEnd()) return;
+
+  // Enrage warning (boss)
+  if (lv.id === 3 && G.eHP < lv.eMaxHP * 0.25 && G.eHP > 0) {
+    log('⚠ MONSTER MAGE ENRAGES — finish it now!', 'log-boss');
+  }
+
+  log(`─── Turn ${G.turnN} ───`, 'log-sys');
+  G.busy = false; setBtns(true);
+}
+
+/* ─────────────────────────────
+   END CHECKS
+───────────────────────────── */
+function checkEnd() {
+  const lv = LEVELS[G.level];
+  if (G.eHP <= 0) {
+    setTimeout(()=>{
+      if (G.level < LEVELS.length - 1) showLevelClear();
+      else endGame(true);
+    }, 600);
+    return true;
+  }
+  if (G.pHP <= 0) {
+    setTimeout(()=>endGame(false), 600);
+    return true;
+  }
+  return false;
+}
+
+/* ─────────────────────────────
+   LEVEL CLEAR
+───────────────────────────── */
+function showLevelClear() {
+  const lv = LEVELS[G.level];
+  const nextLv = LEVELS[G.level + 1];
+
+  const hpR = Math.min(lv.hpReward, G.pMaxHP - G.pHP);
+  const spR = Math.min(lv.spReward, G.pMaxSP - G.pSP);
+
+  pendingRewards = { hpR, spR, maxHpBonus:lv.maxHpBonus, maxSpBonus:lv.maxSpBonus };
+
+  document.getElementById('lc-title').textContent = `LEVEL ${lv.id} CLEAR!`;
+  const subs = [
+    'The mage crumbles to dust.',
+    'Darkness recedes. Forge on.',
+    'Victory — the hardest fight still awaits.',
+    'The enemy falls. You grow stronger.'
+  ];
+  document.getElementById('lc-sub').textContent = subs[rand(0, subs.length-1)];
+
+  document.getElementById('r-hp').textContent  = `+${hpR}`;
+  document.getElementById('r-sp').textContent  = `+${spR}`;
+  document.getElementById('r-mhp').textContent = `+${lv.maxHpBonus}`;
+  document.getElementById('r-msp').textContent = `+${lv.maxSpBonus}`;
+
+  document.getElementById('np-name').textContent = nextLv.name;
+  document.getElementById('np-stats').textContent =
+    `HP: ${nextLv.eMaxHP} · ATK: ${nextLv.atkMin}–${nextLv.atkMax}` +
+    (nextLv.healChance > 0 ? ` · Heals (${Math.round(nextLv.healChance*100)}%)` : '');
+
+  document.getElementById('lc-next-btn').textContent = `FACE ${nextLv.name} ▶`;
+
+  showScreen('levelclear-screen');
+}
+
+function nextLevel() {
+  const r = pendingRewards;
+  G.pMaxHP += r.maxHpBonus; G.pMaxSP += r.maxSpBonus;
+  G.pHP = Math.min(G.pMaxHP, G.pHP + r.hpR);
+  G.pSP = Math.min(G.pMaxSP, G.pSP + r.spR);
+  G.level++;
+  beginLevel();
+}
+
+/* ─────────────────────────────
+   GAME OVER
+───────────────────────────── */
+function endGame(won) {
+  const t = document.getElementById('r-title');
+  const s = document.getElementById('r-sub');
+
+  if (won) {
+    t.textContent = '🏆 TRIUMPH!';
+    t.className   = 'result-title r-win';
+    const wins = [
+      'The Monster Mage shatters into void.',
+      'The realm breathes free. Forger is legend.',
+      'No darkness can withstand the forge.',
+      'Your name echoes through the ages.'
+    ];
+    s.textContent = wins[rand(0, wins.length-1)];
+  } else {
+    t.textContent = '💀 DEFEATED';
+    t.className   = 'result-title r-lose';
+    const losses = [
+      'Forger falls. The shadows claim you.',
+      "The mage's laughter echoes as Forger fades.",
+      'Even legends can fall. Rise again.',
+      'The Monster Mage reigns supreme.'
+    ];
+    s.textContent = losses[rand(0, losses.length-1)];
+  }
+
+  document.getElementById('s-level').textContent = G.level + 1;
+  document.getElementById('s-turns').textContent = G.totalTurns;
+  document.getElementById('s-hp').textContent    = won ? Math.max(0, G.pHP) : 0;
+
+  showScreen('gameover-screen');
+}
+</script>
+</body>
+</html>
